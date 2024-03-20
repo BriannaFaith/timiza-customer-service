@@ -66,6 +66,9 @@ class Users:
         cursor.execute("INSERT INTO users (username, password_hash, role, email) VALUES (?, ?, ?, ?)",
                        (self.username, self.password_hash, self.role, self.email))
         conn.commit()
+    def create_new_user(self):
+        pass
+    
 
     @classmethod
     def find_by_username(cls, username):
@@ -112,7 +115,3 @@ class Reports:
         cursor.execute("INSERT INTO reports (type, data) VALUES (?, ?)",
                        (self.type, self.data))
         conn.commit()
-
-input = ("Welcome to Timiza!")
-prompt= ("What sevice would you like?")
-print(input, prompt)
