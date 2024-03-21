@@ -1,5 +1,4 @@
 import sqlite3
-import hashlib
 
 conn = sqlite3.connect("timiza-data.db")
 cursor = conn.cursor()
@@ -13,7 +12,8 @@ CREATE TABLE IF NOT EXISTS customers(
     first_name TEXT,
     last_name TEXT,
     phone_number TEXT,
-    address TEXT
+    address TEXT,
+    account_number INTEGER DEFAULT 1000000100
 )
 """)
 
@@ -31,8 +31,17 @@ CREATE TABLE IF NOT EXISTS tickets(
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS transactions(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER,
+    last_transaction TEXT,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+)
+""")
+
 class Customer:
-    def __init__(self, id, username, password_hash, email, first_name, last_name, phone_number, address):
+    def __init__(self, id, username, password_hash, email, first_name, last_name, phone_number, address, account_number= None):
         self.id = id
         self.username = username
         self.password_hash = password_hash
@@ -41,6 +50,7 @@ class Customer:
         self.last_name = last_name
         self.phone_number = phone_number
         self.address = address
+        self.account_number = account_number
 
     def save(self):
         """Save the user data to the database."""
@@ -51,6 +61,7 @@ class Customer:
             print("New Customer saved successfully.")
         except sqlite3.IntegrityError:
             print("Error: Username already exists.")
+    def show_last_transaction
 
     @staticmethod
     def sign_in():
@@ -74,6 +85,7 @@ class Customer:
             print(f"Username: {customer_data[1]}")
             print(f"Email Address: {customer_data[3]}")
             print(f"Phone Number: {customer_data[6]}")
+            print(f"Account Number: {customer_data[8]}")
             print(f"Location: {customer_data[7]}")
             print (f"Password: {customer_data[2]}")
 
@@ -81,13 +93,13 @@ class Customer:
             print("Customer not found in the database.")
 
 
-    def update_account_information(self,password, email, first_name, last_name, phone_number, address):
+    def update_account_information(self,password_hash, email, first_name, last_name, phone_number, address):
         self.email = email
         self.first_name = first_name
         self.last_name = last_name
         self.phone_number = phone_number
         self.address = address
-        self.password_hash = hashlib.sha256(password.encode()).hexdigest()
+        self.password_hash = password_hash
         try:
             cursor.execute("UPDATE customers SET password_hash = ?, email = ?, first_name = ?, last_name = ?, phone_number = ?, address = ? WHERE username = ?",
                            (self.password_hash, self.email, self.first_name, self.last_name, self.phone_number, self.address, self.username))
@@ -125,7 +137,7 @@ class Customer:
         if tickets:
             print("Tickets: ")
             for ticket in tickets:
-                print("----------")
+                print("-----------------------------------------------------------")
                 print(f"Ticket ID: {ticket[0]}")
                 print(f"Subject: {ticket[2]}")
                 print(f"Description: {ticket[3]}")
@@ -133,9 +145,17 @@ class Customer:
                 print(f"Status: {ticket[5]}")
                 print(f"Assigned Staff: {ticket[6]}")
                 print(f"Date: {ticket[7]}")
-                print("----------")
+                print("---------------------------------------------------------")
         else:
             print("You have no tickets")
+
+cursor.execute("PRAGMA table_info(customers)")
+columns = cursor.fetchall()
+column_names = [column[1] for column in columns]
+if 'account_number' not in column_names:
+    cursor.execute("ALTER TABLE customers ADD COLUMN account_number INTEGER DEFAULT 1000000100;")
+    cursor.execute("UPDATE customers SET account_number = 1000000100 + id;")
+    conn.commit()
 
 
 class Tickets:
@@ -192,11 +212,11 @@ class Reports:
         total_tickets = Reports.total_tickets()
         unresolved_tickets = Reports.unresolved_tickets()
 
-        print("------ System Report ------")
+        print("----------------System Report -----------------------")
         print(f"Total Customers: {total_customers}")
         print(f"Total Tickets: {total_tickets}")
         print(f"Unresolved Tickets: {unresolved_tickets}")
-        print("---------------------------")
+        print("-----------------------------------------------------")
 
 class FAQ:
     def __init__(self):
@@ -234,8 +254,31 @@ class FAQ:
             print(f"A: {answer}")
             print("-" * 20)
 
+class Transaction:
+    def __init__(self, customer_id, last_transaction):
+        self.customer_id = customer_id
+        self.last_transaction = last_transaction
+
+    def save_transaction(self):
+        try:
+            cursor.execute("INSERT INTO transactions (customer_id, last_transaction) VALUES (?, ?)",
+                           (self.customer_id, self.last_transaction))
+            conn.commit()
+            print("Transaction saved successfully.")
+        except sqlite3.Error as e:
+            print(f"Error saving transaction: {e}")
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_transactions_by_customer_id(customer_id):
+        cursor.execute("SELECT * FROM transactions WHERE customer_id = ?", (customer_id,))
+        transactions = cursor.fetchall()
+        conn.close()
+        return transactions
 
 def main():
+    print (" Welcome")
     options = '''
     0 - Sign in
     1 - Register a new account
@@ -249,7 +292,7 @@ def main():
     0 - Account Information
     1 - Update account Information
     2 - Tickets
-    3 - Submit feedback
+    3 - Show last transaction
     4 - Generate Report
     5 - Exit
     '''
@@ -272,13 +315,13 @@ def main():
                         customer.show_account_info()
                         print(account_options)
                     elif account_option == '1':
-                        password= input ("Enter new password:")
+                        password_hash= input ("Enter new password:")
                         email = input("Enter new email: ")
                         first_name = input("Enter new first name: ")
                         last_name = input("Enter new last name: ")
                         phone_number = input("Enter new phone number: ")
                         address = input("Enter new address: ")
-                        customer.update_account_information(password, email, first_name, last_name, phone_number, address)
+                        customer.update_account_information(password_hash, email, first_name, last_name, phone_number, address)
                     elif account_option == '2':
                         print(tickets_options)
                         while True:
@@ -298,7 +341,7 @@ def main():
                                 print("Invalid option")
 
                     elif account_option == '3':
-                        print("Submit feedback")
+                        pass
                     elif account_option == '4':
                         print("Generating report")
                     elif account_option == '5':
@@ -310,12 +353,12 @@ def main():
             first_name = input("Enter first name: ")
             last_name = input("Enter last name: ")
             username = input("Enter your preffered username: ")
-            password = input("Enter password: ")
+            password_hash = input("Enter password: ")
             email = input("Enter email: ")
             phone_number = input("Enter phone number: ")
             address = input("Enter address: ")
 
-            new_customer = Customer(None, username, hashlib.sha256(password.encode()).hexdigest(), email, first_name, last_name, phone_number, address)
+            new_customer = Customer(None, username, password_hash, email, first_name, last_name, phone_number, address)
             new_customer.save()
             print("Account created successfully.")
         elif selectOption == '2':
@@ -327,7 +370,8 @@ def main():
         elif selectOption == '4':
             exit()
         else:
-            print("Invalid Option")
+            print("Invalid Option, Choose again.")
+            print(options)
 
 if __name__ == "__main__":
     main()
