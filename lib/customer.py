@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS transactions(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     customer_id INTEGER,
     last_transaction TEXT,
+    creation_date  DATE,
     FOREIGN KEY (customer_id) REFERENCES customers(id)
 )
 """)
@@ -61,7 +62,6 @@ class Customer:
             print("New Customer saved successfully.")
         except sqlite3.IntegrityError:
             print("Error: Username already exists.")
-    def show_last_transaction
 
     @staticmethod
     def sign_in():
@@ -74,6 +74,18 @@ class Customer:
             return Customer(*customer_data[1:])
         else:
             print("Invalid username or password.")
+
+    def show_last_transaction(self):
+        cursor.execute("SELECT * FROM transactions WHERE customer_id = ? ", (self.id,))
+        transaction_data = cursor.fetchone()
+
+        if transaction_data:
+            print("Last Transaction Information:")
+            print(f"Customer ID: {transaction_data[1]}")
+            print(f"Last Transaction: {transaction_data[2]}")
+            print(f"Created At: {transaction_data[3]}")
+        else:
+            print("No transaction found for this customer.")
 
     def show_account_info(self):
         cursor.execute("SELECT * FROM customers WHERE username = ?", (self.username,))
@@ -112,7 +124,7 @@ class Customer:
         subject = input("Enter the ticket subject: ")
         description = input("Enter a brief description: ")
         priority = input("Choose priority (low, medium, high): ").lower()
-        status = 'open'  # Status is set to 'open' by default
+        status = 'open'
         assigned_staff = None
         try:
             cursor.execute("""
@@ -148,6 +160,14 @@ class Customer:
                 print("---------------------------------------------------------")
         else:
             print("You have no tickets")
+
+    @staticmethod
+    def customer_care_contacts():
+        print("For inquiries with your account, Reach us on:")
+        phone_number = "+2541000000000"
+        email = "timizagroup@gmail.com"
+        contacts = f"Phone: {phone_number}\nEmail: {email}"
+        print(contacts)
 
 cursor.execute("PRAGMA table_info(customers)")
 columns = cursor.fetchall()
@@ -255,13 +275,14 @@ class FAQ:
             print("-" * 20)
 
 class Transaction:
-    def __init__(self, customer_id, last_transaction):
+    def __init__(self, customer_id, last_transaction, creation_date):
         self.customer_id = customer_id
         self.last_transaction = last_transaction
+        self.creation_date = creation_date
 
     def save_transaction(self):
         try:
-            cursor.execute("INSERT INTO transactions (customer_id, last_transaction) VALUES (?, ?)",
+            cursor.execute("INSERT INTO transactions (customer_id, last_transaction, creation_date) VALUES (?, ?, ?)",
                            (self.customer_id, self.last_transaction))
             conn.commit()
             print("Transaction saved successfully.")
@@ -293,7 +314,7 @@ def main():
     1 - Update account Information
     2 - Tickets
     3 - Show last transaction
-    4 - Generate Report
+    4 - Customer Support Contacts
     5 - Exit
     '''
     tickets_options = '''
@@ -341,9 +362,10 @@ def main():
                                 print("Invalid option")
 
                     elif account_option == '3':
-                        pass
+                        customer.show_last_transaction()
+
                     elif account_option == '4':
-                        print("Generating report")
+                        Customer.customer_care_contacts()
                     elif account_option == '5':
                         print(options)
                         break

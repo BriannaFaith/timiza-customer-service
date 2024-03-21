@@ -1,6 +1,11 @@
-INSERT INTO customers (username, password_hash, email, first_name, last_name, phone_number, address) VALUES
-('briannaFaith', 'password123', 'faithbrianna@gmail.com', 'Faith', 'Brianna', '0745123123', 'Mombasa'),
-('evansWilliams', 'securepass', 'evansWilliams@example.com', 'Evans', 'Williams', '0715423123', 'Nairobi'),
-('nellyNyla', '123456', 'nellyNyla@gmail.com', 'Nelly', 'Nyla', '0745456123', 'Kisumu'),
-('kimaniGeorge', '123456', 'kimaniGeorge@gmail.com', 'George', 'Kimani', '0745000012', 'Nakuru'),
-('nicole', '12345678', 'nicole1@gmail.com', 'Nicole', 'Gesare', '0722909090', 'Kilifi');
+INSERT INTO transactions (customer_id, amount, transaction_type, creation_date)
+VALUES
+    (1, 10000, 'Purchase', '2024-03-25 08:30:00'),
+    (2, 7500, 'Purchase', '2024-03-26 10:15:00'),
+    (3, 500,000, 'Deposit', '2024-03-27 12:45:00'),
+    (4, 300,750, 'Withdrawal', '2024-03-28 15:20:00'),
+    (5, 100,500, 'Purchase', '2024-03-25 08:30:00'),
+    (6, 75200, 'Purchase', '2024-03-26 10:15:00'),
+    (7, 5000, 'Deposit', '2024-03-27 12:45:00'),
+    (8, 3075, 'Withdrawal', '2024-03-28 15:20:00'),
+    (9, 2000.00, 'Purchase', '2024-03-29 18:10:00');
