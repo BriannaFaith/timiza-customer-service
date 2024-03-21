@@ -167,14 +167,81 @@ class Tickets:
         cursor.execute("SELECT * FROM tickets WHERE customer_id = ?", (customer_id,))
         return cursor.fetchall()
 
+class Reports:
+    @staticmethod
+    def total_customers():
+        cursor.execute("SELECT COUNT(*) FROM customers")
+        result = cursor.fetchone()
+        return result[0]
+
+    @staticmethod
+    def total_tickets():
+        cursor.execute("SELECT COUNT(*) FROM tickets")
+        result = cursor.fetchone()
+        return result[0]
+
+    @staticmethod
+    def unresolved_tickets():
+        cursor.execute("SELECT COUNT(*) FROM tickets WHERE status = 'open'")
+        result = cursor.fetchone()
+        return result[0]
+
+    @staticmethod
+    def generate_report():
+        total_customers = Reports.total_customers()
+        total_tickets = Reports.total_tickets()
+        unresolved_tickets = Reports.unresolved_tickets()
+
+        print("------ System Report ------")
+        print(f"Total Customers: {total_customers}")
+        print(f"Total Tickets: {total_tickets}")
+        print(f"Unresolved Tickets: {unresolved_tickets}")
+        print("---------------------------")
+
+class FAQ:
+    def __init__(self):
+        self.questions_answers = {
+            "1. What is Timiza?": "Timiza is a digital platform that offers various financial services such as banking, loans, savings, and payments through a user-friendly mobile app.",
+            "2. How can I download the Timiza app?": "You can download the Timiza app from the Google Play Store or Apple App Store, depending on your device.",
+            "3. What services does Timiza provide?": """Timiza provides services such as:
+                - Instant loans
+                - Savings and investment options
+                - Bill payments
+                - Airtime top-up
+                - Account management""",
+            "4. How do I apply for a loan on Timiza?": """To apply for a loan on Timiza, follow these steps:
+                - Open the Timiza app
+                - Navigate to the Loans section
+                - Choose the loan amount and duration
+                - Complete the application form
+                - Submit the application for review""",
+            "5. Can I transfer money to other accounts using Timiza?": "Yes, you can transfer money to other accounts within Timiza or to external bank accounts linked to your Timiza account.",
+            "6. Is Timiza safe and secure?": "Timiza prioritizes the security and privacy of its users. We use advanced encryption and security protocols to safeguard your financial information.",
+            "7. How can I contact Timiza customer support?": "You can contact Timiza customer support through the app's support section or by calling our customer care hotline at [insert hotline number].",
+            "8. What are the benefits of using Timiza?": """Some benefits of using Timiza include:
+                - Quick access to financial services
+                - Convenient loan application and approval process
+                - Secure transactions
+                - Account management tools""",
+            "9. Are there any fees or charges for using Timiza?": "Timiza may have nominal fees for certain transactions or services. Please refer to the app or contact customer support for detailed information on fees and charges.",
+            "10. Can I track my transactions and account balance on Timiza?": "Yes, you can track your transactions, loan status, and account balance in real time using the Timiza app."
+        }
+
+    def display_faq(self):
+        print("Frequently Asked Questions:")
+        for question, answer in self.questions_answers.items():
+            print(f"Q: {question}")
+            print(f"A: {answer}")
+            print("-" * 20)
 
 
 def main():
     options = '''
     0 - Sign in
-    1 - Create a new account
-    2 - Customer Support
-    3 - Exit
+    1 - Register a new account
+    2 - Reports
+    3 - FAQs
+    4 - Exit
     '''
     print(options)
 
@@ -252,8 +319,12 @@ def main():
             new_customer.save()
             print("Account created successfully.")
         elif selectOption == '2':
-            print("Customer support")
+            Reports.generate_report()
         elif selectOption == '3':
+            faq = FAQ()
+            faq.display_faq()
+            print(options)
+        elif selectOption == '4':
             exit()
         else:
             print("Invalid Option")
