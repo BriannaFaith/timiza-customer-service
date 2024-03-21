@@ -17,8 +17,23 @@ CREATE TABLE IF NOT EXISTS customers(
 )
 """)
 
+cursor.execute ("""
+CREATE TABLE IF NOT EXISTS tickets(
+    ticket_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER,
+    subject TEXT NOT NULL,
+    description TEXT NOT NULL,
+    priority TEXT DEFAULT 'medium',
+    status TEXT DEFAULT 'open',
+    assigned_staff INTEGER,
+    creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id)
+)
+""")
+
 class Customer:
-    def __init__(self, username, password_hash, email, first_name, last_name, phone_number, address):
+    def __init__(self, id, username, password_hash, email, first_name, last_name, phone_number, address):
+        self.id = id
         self.username = username
         self.password_hash = password_hash
         self.email = email
@@ -41,7 +56,7 @@ class Customer:
     def sign_in():
         username = input("Enter your username: ")
         password = input("Enter your password: ")
-        cursor.execute("SELECT * FROM customers WHERE username = ? AND password_hash = ?", (username, password))
+        cursor.execute("SELECT id, * FROM customers WHERE username = ? AND password_hash = ?", (username, password))
         customer_data = cursor.fetchone()
 
         if customer_data:
@@ -81,6 +96,79 @@ class Customer:
         except sqlite3.IntegrityError:
             print("Error: Failed to update account information.")
 
+    def create_ticket(self):
+        subject = input("Enter the ticket subject: ")
+        description = input("Enter a brief description: ")
+        priority = input("Choose priority (low, medium, high): ").lower()
+        status = 'open'  # Status is set to 'open' by default
+        assigned_staff = None
+        try:
+            cursor.execute("""
+                INSERT INTO tickets (customer_id, subject, description, priority, status, assigned_staff)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (self.id, subject, description, priority, status, assigned_staff))
+            conn.commit()
+            print("New ticket created successfully.")
+        except sqlite3.IntegrityError:
+            print("Error: Failed to create ticket.")
+
+    def delete_ticket(self, ticket_id):
+        try:
+            cursor.execute("DELETE FROM tickets WHERE ticket_id = ? AND customer_id = ?", (ticket_id, self.id))
+            conn.commit()
+            print("Ticket deleted successfully.")
+        except sqlite3.Error as e:
+            print(f"Error deleting ticket: {e}")
+
+    def show_tickets(self):
+        tickets = Tickets.get_tickets_by_customer_id(self.id)
+        if tickets:
+            print("Tickets: ")
+            for ticket in tickets:
+                print("----------")
+                print(f"Ticket ID: {ticket[0]}")
+                print(f"Subject: {ticket[2]}")
+                print(f"Description: {ticket[3]}")
+                print(f"Priority: {ticket[4]}")
+                print(f"Status: {ticket[5]}")
+                print(f"Assigned Staff: {ticket[6]}")
+                print(f"Date: {ticket[7]}")
+                print("----------")
+        else:
+            print("You have no tickets")
+
+
+class Tickets:
+    def __init__(self, customer_id, subject, description, priority, status, assigned_staff, creation_date ):
+        self.customer_id = customer_id
+        self.subject= subject
+        self.description= description
+        self.priority = priority
+        self.status = status
+        self.assigned_staff = assigned_staff
+        self.creation_date = creation_date
+
+    def save(self):
+        """Save the ticket data to the database."""
+        try:
+            cursor.execute("""
+                INSERT INTO tickets (customer_id, subject, description, priority, status, assigned_staff, creation_date)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (self.customer_id, self.subject, self.description, self.priority, self.status,self.assigned_staff, self.creation_date))
+            conn.commit()
+            print("New ticket created successfully.")
+
+        except sqlite3.IntegrityError:
+            print("Error: Failed to create ticket.")
+
+    @staticmethod
+    def get_tickets_by_customer_id(customer_id):
+        """Retrieve all tickets for a specific customer."""
+        cursor.execute("SELECT * FROM tickets WHERE customer_id = ?", (customer_id,))
+        return cursor.fetchall()
+
+
+
 def main():
     options = '''
     0 - Sign in
@@ -93,10 +181,16 @@ def main():
     account_options = '''
     0 - Account Information
     1 - Update account Information
-    2 - Create a ticket
+    2 - Tickets
     3 - Submit feedback
     4 - Generate Report
     5 - Exit
+    '''
+    tickets_options = '''
+    0 - Show tickets
+    1 - Create a ticket
+    2 - Delete a ticket
+    3 - Go back
     '''
 
     while True:
@@ -119,7 +213,23 @@ def main():
                         address = input("Enter new address: ")
                         customer.update_account_information(password, email, first_name, last_name, phone_number, address)
                     elif account_option == '2':
-                        print("Creates a new ticket")
+                        print(tickets_options)
+                        while True:
+                            tickets_option = input('Ticket Options >> ')
+                            if tickets_option == '0':
+                                customer.show_tickets()
+                                print(tickets_options)
+                            elif tickets_option == '1':
+                                customer.create_ticket()
+                            elif tickets_option == '2':
+                                ticket_id = input("Enter the ticket id to delete: ")
+                                customer.delete_ticket(ticket_id)
+                            elif tickets_option == '3':
+                                break
+
+                            else:
+                                print("Invalid option")
+
                     elif account_option == '3':
                         print("Submit feedback")
                     elif account_option == '4':
@@ -130,8 +240,17 @@ def main():
                     else:
                         print("Invalid option")
         elif selectOption == '1':
-            # Implement account creation logic here
-            print("Account creation not implemented yet")
+            first_name = input("Enter first name: ")
+            last_name = input("Enter last name: ")
+            username = input("Enter your preffered username: ")
+            password = input("Enter password: ")
+            email = input("Enter email: ")
+            phone_number = input("Enter phone number: ")
+            address = input("Enter address: ")
+
+            new_customer = Customer(None, username, hashlib.sha256(password.encode()).hexdigest(), email, first_name, last_name, phone_number, address)
+            new_customer.save()
+            print("Account created successfully.")
         elif selectOption == '2':
             print("Customer support")
         elif selectOption == '3':
