@@ -329,7 +329,7 @@ class Transaction:
         conn.close()
         return transactions
 
-# cli interface for client to interact with
+# CLI interface for clients to interact with Timiza Bank Customer Service
 def main():
     print (" Welcome to Timiza Bank Customer Service")
     options = '''
@@ -362,6 +362,7 @@ def main():
             customer = Customer.sign_in()
             if customer:
                 print(account_options)
+                # loop for account options
                 while True:
                     account_option = input('Account Options >> ')
                     if account_option == '0':
@@ -375,9 +376,11 @@ def main():
                         last_name = input("Enter new last name: ")
                         phone_number = input("Enter new phone number: ")
                         address = input("Enter new address: ")
+                        #update account information
                         customer.update_account_information(password_hash, email, first_name, last_name, phone_number, address)
                     elif account_option == '2':
                         print(tickets_options)
+                        # loop for ticket options
                         while True:
                             tickets_option = input('Ticket Options >> ')
                             if tickets_option == '0':
@@ -434,4 +437,5 @@ def main():
 if __name__ == "__main__":
     main()
 
+# closing the database connection
 conn.close()
