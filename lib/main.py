@@ -1,9 +1,11 @@
 import sqlite3
 
+#establishing database connection
 conn = sqlite3.connect("timiza-data.db")
 cursor = conn.cursor()
 
 #tables creation
+#customers table
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS customers(
     id INTEGER PRIMARY KEY,
@@ -18,6 +20,7 @@ CREATE TABLE IF NOT EXISTS customers(
 )
 """)
 
+#tickets table
 cursor.execute ("""
 CREATE TABLE IF NOT EXISTS tickets(
     ticket_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -32,6 +35,7 @@ CREATE TABLE IF NOT EXISTS tickets(
 )
 """)
 
+#transations table
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS transactions(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,15 +63,17 @@ class Customer:
     def save(self):
         """Save the user data to the database."""
         try:
+            # insert customer data into the database
             cursor.execute("INSERT INTO customers (username, password_hash, email, first_name, last_name, phone_number, address) VALUES (?, ?, ?, ?, ?, ?, ?)",
                            (self.username, self.password_hash, self.email, self.first_name, self.last_name, self.phone_number, self.address))
-            conn.commit()
+            conn.commit() # commit changes to the db
             print("New Customer saved successfully.")
         except sqlite3.IntegrityError:
             print("Error: Username already exists.")
 
     @staticmethod
     def sign_in():
+        #allows ustomers to sign in
         username = input("Enter your username: ")
         password = input("Enter your password: ")
         cursor.execute("SELECT id, * FROM customers WHERE username = ? AND password_hash = ?", (username, password))
@@ -79,6 +85,7 @@ class Customer:
             print("Invalid username or password.")
 
     def show_last_transaction(self):
+        # Display the last transaction of the customer
         cursor.execute("SELECT * FROM transactions WHERE customer_id = ? ", (self.id,))
         transaction_data = cursor.fetchone()
 
@@ -93,6 +100,7 @@ class Customer:
             print("You dont have any recent transactions")
 
     def show_account_info(self):
+        # Display the account information of the customer
         cursor.execute("SELECT * FROM customers WHERE username = ?", (self.username,))
         customer_data = cursor.fetchone()
 
@@ -113,6 +121,7 @@ class Customer:
 
 
     def update_account_information(self,password_hash, email, first_name, last_name, phone_number, address):
+        # updates the account data info for the customer
         self.email = email
         self.first_name = first_name
         self.last_name = last_name
@@ -128,12 +137,14 @@ class Customer:
             print("Error: Failed to update account information.")
 
     def create_ticket(self):
+        # allows user to create a ticket for inquiries
         subject = input("Enter the ticket subject: ")
         description = input("Enter a brief description: ")
         priority = input("Choose priority (low, medium, high): ").lower()
         status = 'open'
         assigned_staff = None
         try:
+            #inserting ticket information
             cursor.execute("""
                 INSERT INTO tickets (customer_id, subject, description, priority, status, assigned_staff)
                 VALUES (?, ?, ?, ?, ?, ?)
@@ -145,6 +156,7 @@ class Customer:
             print("Error: Failed to create ticket.")
 
     def delete_ticket(self, ticket_id):
+        # allows a customer to delete ticket with ticket_id
         try:
             cursor.execute("DELETE FROM tickets WHERE ticket_id = ? AND customer_id = ?", (ticket_id, self.id))
             conn.commit()
@@ -154,6 +166,7 @@ class Customer:
             print(f"Error deleting ticket: {e}")
 
     def show_tickets(self):
+        # Displays the tickets created by the customer
         tickets = Tickets.get_tickets_by_customer_id(self.id)
         if tickets:
             print("Tickets: ")
@@ -172,6 +185,7 @@ class Customer:
 
     @staticmethod
     def customer_care_contacts():
+        # Display  customer care contacts data
         print("For inquiries with your account, Reach us on:")
         phone_number = "+2541000000000"
         email = "timizagroup@gmail.com"
@@ -201,6 +215,7 @@ class Tickets:
     def save(self):
         """Save the ticket data to the database."""
         try:
+            # inserting ticket data
             cursor.execute("""
                 INSERT INTO tickets (customer_id, subject, description, priority, status, assigned_staff, creation_date)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -220,24 +235,28 @@ class Tickets:
 class Reports:
     @staticmethod
     def total_customers():
+        # fetching total customers data from the database
         cursor.execute("SELECT COUNT(*) FROM customers")
         result = cursor.fetchone()
         return result[0]
 
     @staticmethod
     def total_tickets():
+        # fetching total tickets data from the database
         cursor.execute("SELECT COUNT(*) FROM tickets")
         result = cursor.fetchone()
         return result[0]
 
     @staticmethod
     def unresolved_tickets():
+        # fetching unresolved tickets data from the database
         cursor.execute("SELECT COUNT(*) FROM tickets WHERE status = 'open'")
         result = cursor.fetchone()
         return result[0]
 
     @staticmethod
     def generate_report():
+        # full report data
         total_customers = Reports.total_customers()
         total_tickets = Reports.total_tickets()
         unresolved_tickets = Reports.unresolved_tickets()
@@ -292,6 +311,7 @@ class Transaction:
         self.creation_date = creation_date
 
     def save_transaction(self):
+        # inserting transactions data to the table
         try:
             cursor.execute("INSERT INTO transactions (customer_id, last_transaction, creation_date, amount) VALUES (?, ?, ?, ?)",
                            (self.customer_id, self.last_transaction))
@@ -309,6 +329,7 @@ class Transaction:
         conn.close()
         return transactions
 
+# cli interface for client to interact with
 def main():
     print (" Welcome to Timiza Bank Customer Service")
     options = '''
