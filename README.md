@@ -2,7 +2,7 @@
 This is a command-line interface (CLI) application designed to provide customer service for Timiza Bank customers. The system includes features for user authentication, accounts management, ticket handling and many more.
 
 ## Features
-# User Aunthenitcation
+# User Aunthentication
 1. Sign in/ Login: Allows customers to sign in to their accounts.
 2. Enables customers to update their account information, eg passwords
 
@@ -26,7 +26,7 @@ This is a command-line interface (CLI) application designed to provide customer 
 
 ## Usage
 1. Clone the repository to your local machine.
-2. Navigate to the project directory.
+2. Navigate to the project directory. cd into lib folder
 3. Run python3 main.py to start the CLI application.
 4. Follow the on-screen prompts to interact with the system.
 
